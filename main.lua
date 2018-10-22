@@ -7,10 +7,14 @@ end
 function love.update(dt)
 --You place code here when you update things in the game.
 
-  if love.keyboard.isDown("w") then y = y - speed * dt end
-  if love.keyboard.isDown("a") then x = x - speed * dt end
-  if love.keyboard.isDown("d") then x = x + speed * dt end
-  if love.keyboard.isDown("s") then y = y + speed * dt end
+  if love.keyboard.isScancodeDown("w") then y = y - speed * dt end
+  if love.keyboard.isScancodeDown("a") then x = x - speed * dt end
+  if love.keyboard.isScancodeDown("d") then x = x + speed * dt end
+  if love.keyboard.isScancodeDown("s") then y = y + speed * dt end
+  if love.keyboard.isDown("up") then y = y - speed * dt end
+  if love.keyboard.isDown("left") then x = x - speed * dt end
+  if love.keyboard.isDown("right") then x = x + speed * dt end
+  if love.keyboard.isDown("down") then y = y + speed * dt end
 end
 
 function love.draw()
