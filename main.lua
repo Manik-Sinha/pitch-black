@@ -1,6 +1,6 @@
 --main.lua
 
-require "game"
+local game = require "game"
 
 function love.load()
   love.keyboard.setKeyRepeat(true)

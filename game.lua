@@ -97,4 +97,4 @@ function Game.new()
 
   return self
 end
-game = Game.new()
+return Game.new()
