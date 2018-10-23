@@ -24,7 +24,7 @@ function Game.new()
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   }
-  local player_x, player_y = 0, 0
+  local player = require "player"
 
   --Initialize game.
   function self.init()
@@ -33,8 +33,7 @@ function Game.new()
       for c = 1, 30 do
         if map[r][c] == PLAYER then
           if not player_found then
-            player_x = c
-            player_y = r
+            player.set_xy(c, r)
             player_found = true
           else
             map[r][c] = FLOOR
@@ -45,13 +44,13 @@ function Game.new()
   end
 
   function self.keypressed(key, scancode, isrepeat)
+    local player_x, player_y = player.get_xy()
     local function move(new_x, new_y)
       local tile = map[new_y][new_x]
       if tile ~= nil and tile ~= WALL then
         map[player_y][player_x] = FLOOR
         map[new_y][new_x] = PLAYER
-        player_x = new_x
-        player_y = new_y
+        player.set_xy(new_x, new_y)
       end
     end
     if scancode == "w" or scancode == "up" then
