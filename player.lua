@@ -7,9 +7,8 @@ function Player.new()
     x = xx
     y = yy
   end
-  function self.get_xy()
-    return x, y
-  end
+  function self.get_xy() return x, y end
+  function self.get_hp() return hp end
   return self
 end
 return Player.new()

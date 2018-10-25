@@ -82,6 +82,8 @@ function Game.new()
         love.graphics.rectangle("fill", (c - 1) * 32, (r - 1) * 32, 32, 32)
       end
     end
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
   end
 
   --Print the map to the console.

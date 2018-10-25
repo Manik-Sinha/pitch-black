@@ -3,7 +3,7 @@ function newitem(name, storageuse, range, aoe, vision)
   local x, y, duration
   function self.set_xy(xx,yy)
     x = xx
-	y = yy
+    y = yy
   end
   function self.set_duration(d)
     duration = d
