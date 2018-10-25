@@ -24,13 +24,15 @@ function Game.new()
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   }
+  map.rows = #map
+  map.cols = #map[1]
   local player = require "player"
 
   --Initialize game.
   function self.init()
     local player_found = false
-    for r = 1, 16 do
-      for c = 1, 30 do
+    for r = 1, map.rows do
+      for c = 1, map.cols do
         if map[r][c] == PLAYER then
           if not player_found then
             player.set_xy(c, r)
@@ -69,8 +71,14 @@ function Game.new()
 
   --Draw game.
   function self.draw()
-    for r = 1, 16 do
-      for c = 1, 30 do
+    local px, py = player.get_xy()
+    local pv = player.get_vision()
+    local first_row = math.max(py - pv, 1)
+    local last_row = math.min(py + pv, map.rows)
+    local first_col = math.max(px - pv, 1)
+    local last_col = math.min(px + pv, map.cols)
+    for r = first_row, last_row do
+      for c = first_col, last_col do
         local tile = map[r][c]
         if tile == FLOOR then
           love.graphics.setColor(0.2, 0.2, 0.2)
@@ -88,8 +96,8 @@ function Game.new()
 
   --Print the map to the console.
   function self.print()
-    for r = 1, 16 do
-      for c = 1, 30 do
+    for r = 1, map.rows do
+      for c = 1, map.cols do
         io.write(map[r][c], " ")
       end
       io.write("\n")
