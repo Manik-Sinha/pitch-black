@@ -19,8 +19,12 @@ function love.keypressed(key, scancode, isrepeat)
   game.keypressed(key, scancode, isrepeat)
   if scancode == "escape" then
     love.event.quit()
-  elseif scancode == "f" then
+  end
+  if scancode == "f" then
     love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
+  end
+  if scancode == "v" then
+    game.vision_cycle()
   end
 end
 

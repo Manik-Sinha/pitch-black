@@ -2,7 +2,7 @@ local Player = {}
 function Player.new()
   local self = {}
   local x, y
-  local hp, attack, defense, vision = 1, 1, 1, 3
+  local hp, attack, defense, vision = 1, 1, 1, 2
   function self.set_xy(xx, yy)
     x = xx
     y = yy
