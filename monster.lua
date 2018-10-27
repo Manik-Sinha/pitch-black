@@ -1,6 +1,7 @@
 function newmonster(type, x, y, health, attack, defense, vision, speed, range)
   x, y = 0, 0
   local self = {}
+  local dead = false
   function self.set_xy(xx,yy)
     x = xx
     y = yy
@@ -21,6 +22,13 @@ function newmonster(type, x, y, health, attack, defense, vision, speed, range)
   function self.get_xy() return x, y end
   function self.get_x() return x end
   function self.get_y() return y end
+  function self.take_damage(damage)
+    local damage_dealt = math.max(0, damage - defense)
+    health = health - damage_dealt
+    if health < 0 then dead = true end
+    return damage_dealt
+  end
+  function self.isdead() return dead end
   if type == "skeleton" then
     health, attack, defense, speed, vision = 1, 2, 0, 2, 5
   end

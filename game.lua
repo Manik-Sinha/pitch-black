@@ -1,5 +1,7 @@
 --game.lua
-
+require "monster"
+local m = require "messenger"
+local messenger = m.new(5)
 --Game class.
 local Game = {}
 function Game.new()
@@ -29,6 +31,14 @@ function Game.new()
   local player = require "player"
   --Assume view.h and view.w are odd for now.
   local view = {w = 21, h = 11}
+
+  local monsters = {}
+  for i = 1, 3 do
+    monsters[i] = newmonster("spider")
+  end
+  monsters[1].set_xy(5, 3)
+  monsters[2].set_xy(5, 10)
+  monsters[3].set_xy(10, 4)
 
   local near_vision = 1
   local far_vision =  1
@@ -68,11 +78,29 @@ function Game.new()
   function self.keypressed(key, scancode, isrepeat)
     local player_x, player_y = player.get_xy()
     local function move(new_x, new_y)
-      local tile = map[new_y][new_x]
-      if tile ~= nil and tile ~= WALL then
-        map[player_y][player_x] = FLOOR
-        map[new_y][new_x] = PLAYER
-        player.set_xy(new_x, new_y)
+      local monster_found = false
+      for i = 1, 3 do
+        local x, y = monsters[i].get_xy()
+        if new_x == x and new_y == y and not monsters[i].isdead() then
+          monster_found = true
+          local dmg = monsters[i].take_damage(player.get_attack())
+          local monster = monsters[i].get_type()
+          messenger.post("Hit a " .. monster .. " for " .. dmg .. " damage.")
+          if not monsters[i].isdead() then
+            dmg = player.take_damage(monsters[i].get_attack())
+            messenger.post("Hit by " .. monster .. " for " .. dmg .. " dmg.")
+          else
+            messenger.post("You killed a " .. monster .. ".")
+          end
+        end
+      end
+      if not monster_found then
+        local tile = map[new_y][new_x]
+        if tile ~= nil and tile ~= WALL then
+          map[player_y][player_x] = FLOOR
+          map[new_y][new_x] = PLAYER
+          player.set_xy(new_x, new_y)
+        end
       end
     end
     if scancode == "w" or scancode == "up" then
@@ -124,7 +152,6 @@ function Game.new()
       first_row = last_row - view.h + 1
     end
     --]]
-
     for r = first_row, last_row do
       for c = first_col, last_col do
         local tile = map[r][c]
@@ -146,6 +173,23 @@ function Game.new()
             32
           )
         --end
+      end
+    end
+    for i = 1, 3 do
+      local x, y = monsters[i].get_xy()
+      local dist_x = view.w - math.abs(px - x)
+      local dist_y = view.h - math.abs(py - y)
+      if first_row <= y and y <= last_row and
+         first_col <= x and x <= last_col and
+         not monsters[i].isdead() then
+        love.graphics.setColor(0, 1, 0, far_vision * dist_x * dist_y)
+        love.graphics.rectangle(
+          "fill",
+          (x - first_col + 4) * 32,
+          (y - first_row + 3) * 32,
+          32,
+          32
+        )
       end
     end
     ---[[
@@ -171,8 +215,29 @@ function Game.new()
       end
     end
     --]]
+    for i = 1, 3 do
+      local x, y = monsters[i].get_xy()
+      local dist_x = view.w - math.abs(px - x)
+      local dist_y = view.h - math.abs(py - y)
+      if vision_first_row <= y and y <= vision_last_row and
+         vision_first_col <= x and x <= vision_last_col and
+         not monsters[i].isdead() then
+        love.graphics.setColor(0, 1, 0, near_vision)
+        love.graphics.rectangle(
+          "fill",
+          (x - first_col + 4) * 32,
+          (y - first_row + 3) * 32,
+          32,
+          32
+        )
+      end
+    end
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
+    love.graphics.setColor(1, 1, 1, 0.5)
+    love.graphics.rectangle("fill", 40, window_height - 80, 200, 80)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(messenger.tostring(), 40, window_height - 80)
   end
 
   --Print the map to the console.
