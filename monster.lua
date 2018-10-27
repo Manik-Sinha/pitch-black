@@ -1,4 +1,5 @@
-function newmonster(type, health, attack, defense, vision, speed, range)
+function newmonster(type, x, y, health, attack, defense, vision, speed, range)
+  x, y = 0, 0
   local self = {}
   function self.set_xy(xx,yy)
     x = xx
