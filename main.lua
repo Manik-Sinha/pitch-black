@@ -6,12 +6,14 @@ function love.load()
   love.keyboard.setKeyRepeat(true)
   game.init()
   window_width, window_height = love.window.getMode()
+  scale = {}
 end
 
 function love.update(dt)
 end
 
 function love.draw()
+  love.resize(1920, 1080)
   game.draw()
 end
 
@@ -29,5 +31,7 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.resize(w, h)
-  window_width, window_height = w, h
+  scale.x = love.graphics.getWidth()/w
+  scale.y = love.graphics.getHeight()/h
+  love.graphics.scale(scale.x*2, scale.y*2)
 end
