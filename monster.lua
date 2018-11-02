@@ -1,7 +1,8 @@
-function newmonster(type, x, y, health, attack, defense, vision, speed, range)
+function newmonster(type, behaviour, x, y)
   x, y = 0, 0
   local self = {}
   local dead = false
+  local health, attack, defense, vision, speed, range
   function self.set_xy(xx,yy)
     x = xx
     y = yy
@@ -29,14 +30,16 @@ function newmonster(type, x, y, health, attack, defense, vision, speed, range)
     return damage_dealt
   end
   function self.isdead() return dead end
+  --Monster types
   if type == "skeleton" then
     health, attack, defense, speed, vision = 1, 2, 0, 2, 5
-  end
-  if type == "spider" then
+  elseif type == "spider" then
     health, attack, defense, speed, vision = 3, 5, 2, 2, 7
-  end
-  if type == "bloater" then
+  elseif type == "bloater" then
     health, attack, defense, speed, vision = 5, 10, 5, 0.5, 4
+  else error("That type of monster does not exist, please check your spelling and try again!")
   end
+  --Monster behaviours
+
   return self
 end
