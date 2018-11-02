@@ -8,7 +8,7 @@ local Game = {}
 function Game.new()
   --private variables
   local self = {}
-  local FLOOR, WALL, PLAYER = 0, 1, 2
+  local FLOOR, WALL, START = 0, 1, 2
   local map = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -27,6 +27,8 @@ function Game.new()
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   }
+  map.unit = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
+  map.item = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
   map.rows = #map
   map.cols = #map[1]
   local player = require "player"
@@ -57,7 +59,7 @@ function Game.new()
     local index = 1
     for r = 1, map.rows do
       for c = 1, map.cols do
-        if map[r][c] == FLOOR then
+        if map[r][c] == FLOOR and map.unit[r][c] == nil then
           floor[index] = {}
           floor[index].x = c
           floor[index].y = r
@@ -65,25 +67,29 @@ function Game.new()
         end
       end
     end
-    --Pick random floor tiles to place monsters in.
+    --Place monsters on random floor tiles.
     count = math.min(count, #floor)
     local last_index = #floor
     for i = 1, count do
       local index = love.math.random(1, last_index)
       monsters[i] = newmonster("spider")
-      monsters[i].set_xy(floor[index].x, floor[index].y)
+      local x, y = floor[index].x, floor[index].y
+      monsters[i].set_xy(x, y)
+      map.unit[y][x] = monsters[i]
       floor[index], floor[last_index] = floor[last_index], floor[index]
       last_index = last_index - 1
     end
   end
+
   --Initialize game.
   function self.init()
     local player_found = false
     for r = 1, map.rows do
       for c = 1, map.cols do
-        if map[r][c] == PLAYER then
+        if map[r][c] == START then
           if not player_found then
             player.set_xy(c, r)
+            map.unit[r][c] = player
             player_found = true
           else
             map[r][c] = FLOOR
@@ -116,8 +122,8 @@ function Game.new()
       if not monster_found then
         local tile = map[new_y][new_x]
         if tile ~= nil and tile ~= WALL then
-          map[player_y][player_x] = FLOOR
-          map[new_y][new_x] = PLAYER
+          map.unit[player_y][player_x] = nil
+          map.unit[new_y][new_x] = player
           player.set_xy(new_x, new_y)
         end
       end
@@ -171,18 +177,18 @@ function Game.new()
       first_row = last_row - view.h + 1
     end
     --]]
+    --Far vision:
+    --Draw land.
     for r = first_row, last_row do
       for c = first_col, last_col do
         local tile = map[r][c]
         --if tile ~= nil then
           local dist_x = view.w - math.abs(px - c)
           local dist_y = view.h - math.abs(py - r)
-          if tile == FLOOR then
+          if tile == FLOOR or tile == START then
             love.graphics.setColor(0.2, 0.2, 0.2, far_vision * dist_x * dist_y)
           elseif tile == WALL then
             love.graphics.setColor(1, 1, 1, far_vision * dist_x * dist_y)
-          elseif tile == PLAYER then
-            love.graphics.setColor(1, 0, 0)
           end
           love.graphics.rectangle(
             "fill",
@@ -194,6 +200,18 @@ function Game.new()
         --end
       end
     end
+
+    --Draw player.
+    love.graphics.setColor(1, 0, 0)
+    love.graphics.rectangle(
+      "fill",
+      (player.get_x() - first_col + 4) * 32,
+      (player.get_y() - first_row + 3) * 32,
+      32,
+      32
+    )
+
+    --Draw monsters.
     for i = 1, #monsters do
       local x, y = monsters[i].get_xy()
       local dist_x = view.w - math.abs(px - x)
@@ -211,17 +229,16 @@ function Game.new()
         )
       end
     end
+    --Near vision:
     ---[[
     for r = vision_first_row, vision_last_row do
       for c = vision_first_col, vision_last_col do
         local tile = map[r][c]
         --if tile ~= nil then
-          if tile == FLOOR then
+          if tile == FLOOR or tile == START then
             love.graphics.setColor(0.2, 0.2, 0.2, near_vision)
           elseif tile == WALL then
             love.graphics.setColor(1, 1, 1, near_vision)
-          elseif tile == PLAYER then
-            love.graphics.setColor(1, 0, 0, near_vision)
           end
           love.graphics.rectangle(
             "fill",
@@ -234,6 +251,17 @@ function Game.new()
       end
     end
     --]]
+    --Draw player.
+    love.graphics.setColor(1, 0, 0, near_vision)
+    love.graphics.rectangle(
+      "fill",
+      (player.get_x() - first_col + 4) * 32,
+      (player.get_y() - first_row + 3) * 32,
+      32,
+      32
+    )
+
+    --Draw monsters.
     for i = 1, #monsters do
       local x, y = monsters[i].get_xy()
       local dist_x = view.w - math.abs(px - x)
@@ -251,8 +279,10 @@ function Game.new()
         )
       end
     end
+    --Draw hp.
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
+    --Draw message box.
     love.graphics.setColor(1, 1, 1, 0.5)
     love.graphics.rectangle("fill", 40, window_height - 80, 200, 80)
     love.graphics.setColor(0, 0, 0)

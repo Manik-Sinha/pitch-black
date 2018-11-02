@@ -8,6 +8,8 @@ function Player.new()
     y = yy
   end
   function self.get_xy() return x, y end
+  function self.get_x() return x end
+  function self.get_y() return y end
   function self.get_hp() return hp end
   function self.get_vision() return vision end
   function self.get_attack() return attack end
