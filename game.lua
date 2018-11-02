@@ -33,14 +33,6 @@ function Game.new()
   --Assume view.h and view.w are odd for now.
   local view = {w = 21, h = 11}
 
-  local monsters = {}
-  for i = 1, 3 do
-    monsters[i] = newmonster("spider")
-  end
-  monsters[1].set_xy(5, 3)
-  monsters[2].set_xy(5, 10)
-  monsters[3].set_xy(10, 4)
-
   local near_vision = 1
   local far_vision =  1
   local vision_state = 1
@@ -56,9 +48,34 @@ function Game.new()
       far_vision = 0.005
       near_vision = 0
     end
-
   end
 
+  local monsters = {}
+  function place_monsters(count)
+    --Create table floor holding all coordinates of floor tiles.
+    local floor = {}
+    local index = 1
+    for r = 1, map.rows do
+      for c = 1, map.cols do
+        if map[r][c] == FLOOR then
+          floor[index] = {}
+          floor[index].x = c
+          floor[index].y = r
+          index = index + 1
+        end
+      end
+    end
+    --Pick random floor tiles to place monsters in.
+    count = math.min(count, #floor)
+    local last_index = #floor
+    for i = 1, count do
+      local index = love.math.random(1, last_index)
+      monsters[i] = newmonster("spider")
+      monsters[i].set_xy(floor[index].x, floor[index].y)
+      floor[index], floor[last_index] = floor[last_index], floor[index]
+      last_index = last_index - 1
+    end
+  end
   --Initialize game.
   function self.init()
     local player_found = false
@@ -74,13 +91,14 @@ function Game.new()
         end
       end
     end
+    place_monsters(5)
   end
 
   function self.keypressed(key, scancode, isrepeat)
     local player_x, player_y = player.get_xy()
     local function move(new_x, new_y)
       local monster_found = false
-      for i = 1, 3 do
+      for i = 1, #monsters do
         local x, y = monsters[i].get_xy()
         if new_x == x and new_y == y and not monsters[i].isdead() then
           monster_found = true
@@ -176,7 +194,7 @@ function Game.new()
         --end
       end
     end
-    for i = 1, 3 do
+    for i = 1, #monsters do
       local x, y = monsters[i].get_xy()
       local dist_x = view.w - math.abs(px - x)
       local dist_y = view.h - math.abs(py - y)
@@ -216,7 +234,7 @@ function Game.new()
       end
     end
     --]]
-    for i = 1, 3 do
+    for i = 1, #monsters do
       local x, y = monsters[i].get_xy()
       local dist_x = view.w - math.abs(px - x)
       local dist_y = view.h - math.abs(py - y)
