@@ -64,6 +64,8 @@ function Game.new()
         end
         index = index + 1
       else
+        local x, y = monsters[i].get_xy()
+        map.unit[y][x] = nil
         monsters[i] = nil
       end
     end
@@ -131,7 +133,6 @@ function Game.new()
           messenger.post("Hit by " .. monster_type .. " for " .. dmg .. " dmg.")
         else
           messenger.post("You killed a " .. monster_type .. ".")
-          map.unit[new_y][new_x] = nil
           monster_died = true
         end
       end
