@@ -19,6 +19,7 @@ function Player.new()
     --No death implemented yet.
     return damage_dealt
   end
+  function self.ismonster() return false end
   return self
 end
 return Player.new()

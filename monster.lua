@@ -30,6 +30,7 @@ function newmonster(type, behaviour, x, y)
     return damage_dealt
   end
   function self.isdead() return dead end
+  function self.ismonster() return true end
   --Monster types
   if type == "skeleton" then
     health, attack, defense, speed, vision = 1, 2, 0, 2, 5

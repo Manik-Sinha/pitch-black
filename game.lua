@@ -53,6 +53,21 @@ function Game.new()
   end
 
   local monsters = {}
+  function remove_dead_monsters()
+    local index = 1
+    local length = #monsters
+    for i = 1, length do
+      if not monsters[i].isdead() then
+        if i ~= index then
+          monsters[index] = monsters[i]
+          monsters[i] = nil
+        end
+        index = index + 1
+      else
+        monsters[i] = nil
+      end
+    end
+  end
   function place_monsters(count)
     --Create table floor holding all coordinates of floor tiles.
     local floor = {}
@@ -103,22 +118,24 @@ function Game.new()
   function self.keypressed(key, scancode, isrepeat)
     local player_x, player_y = player.get_xy()
     local function move(new_x, new_y)
+      local monster_died = false
       local monster_found = false
-      for i = 1, #monsters do
-        local x, y = monsters[i].get_xy()
-        if new_x == x and new_y == y and not monsters[i].isdead() then
-          monster_found = true
-          local dmg = monsters[i].take_damage(player.get_attack())
-          local monster = monsters[i].get_type()
-          messenger.post("Hit a " .. monster .. " for " .. dmg .. " damage.")
-          if not monsters[i].isdead() then
-            dmg = player.take_damage(monsters[i].get_attack())
-            messenger.post("Hit by " .. monster .. " for " .. dmg .. " dmg.")
-          else
-            messenger.post("You killed a " .. monster .. ".")
-          end
+      local monster = map.unit[new_y][new_x]
+      if monster ~= nil and monster.ismonster() then
+        monster_found = true
+        local dmg = monster.take_damage(player.get_attack())
+        local monster_type = monster.get_type()
+        messenger.post("Hit a " .. monster_type .. " for " .. dmg .. " damage.")
+        if not monster.isdead() then
+          dmg = player.take_damage(monster.get_attack())
+          messenger.post("Hit by " .. monster_type .. " for " .. dmg .. " dmg.")
+        else
+          messenger.post("You killed a " .. monster_type .. ".")
+          map.unit[new_y][new_x] = nil
+          monster_died = true
         end
       end
+      --Move player to new position.
       if not monster_found then
         local tile = map[new_y][new_x]
         if tile ~= nil and tile ~= WALL then
@@ -127,6 +144,7 @@ function Game.new()
           player.set_xy(new_x, new_y)
         end
       end
+      if monster_died then remove_dead_monsters() end
     end
     if scancode == "w" or scancode == "up" then
       move(player_x, player_y - 1)
