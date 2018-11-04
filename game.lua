@@ -6,7 +6,7 @@ local messenger = m.new(5)
 --Game class.
 local Game = {}
 function Game.new()
-  
+
   --private variables
   local self = {}
   local FLOOR, WALL, START = 0, 1, 2
@@ -116,7 +116,9 @@ function Game.new()
       end
     end
     place_monsters(50)
+    --Needed for resetting the game:
     player.born()
+    messenger.reset()
   end
 
   function self.keypressed(key, scancode, isrepeat)
@@ -149,14 +151,23 @@ function Game.new()
       end
       if monster_died then remove_dead_monsters() end
     end
-    if scancode == "w" or scancode == "up" then
-      move(player_x, player_y - 1)
-    elseif scancode == "s" or scancode == "down" then
-      move(player_x, player_y + 1)
-    elseif scancode == "a" or scancode == "left" then
-      move(player_x - 1, player_y)
-    elseif scancode == "d" or scancode == "right" then
-      move(player_x + 1, player_y)
+    if player.is_alive() then
+      if scancode == "w" or scancode == "up" then
+        move(player_x, player_y - 1)
+      elseif scancode == "s" or scancode == "down" then
+        move(player_x, player_y + 1)
+      elseif scancode == "a" or scancode == "left" then
+        move(player_x - 1, player_y)
+      elseif scancode == "d" or scancode == "right" then
+        move(player_x + 1, player_y)
+      end
+    else
+      if scancode == "space" then
+        --Restart game.
+        --Note that this is a naive reset. Later there may be caveats such as
+        --resetting the map when we restart the game.
+        self.init()
+      end
     end
   end
 
@@ -311,9 +322,8 @@ function Game.new()
       love.graphics.setColor(0, 0, 0)
       love.graphics.print(messenger.tostring(), 40, window_height - 80)
     else
-
+      love.graphics.setColor(1, 1, 1)
       love.graphics.print('You died!', 400, 300)
-
     end
   end
 

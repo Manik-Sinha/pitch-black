@@ -26,7 +26,7 @@ function newmonster(type, behaviour, x, y)
   function self.take_damage(damage)
     local damage_dealt = math.max(0, damage - defense)
     health = health - damage_dealt
-    if health < 0 then dead = true end
+    if health <= 0 then dead = true end
     return damage_dealt
   end
   function self.isdead() return dead end
