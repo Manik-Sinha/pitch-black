@@ -6,6 +6,7 @@ local messenger = m.new(5)
 --Game class.
 local Game = {}
 function Game.new()
+  
   --private variables
   local self = {}
   local FLOOR, WALL, START = 0, 1, 2
@@ -114,7 +115,8 @@ function Game.new()
         end
       end
     end
-    place_monsters(5)
+    place_monsters(50)
+    player.born()
   end
 
   function self.keypressed(key, scancode, isrepeat)
@@ -196,128 +198,136 @@ function Game.new()
       first_row = last_row - view.h + 1
     end
     --]]
-    --Far vision:
-    --Draw land.
-    for r = first_row, last_row do
-      for c = first_col, last_col do
-        local tile = map[r][c]
-        --if tile ~= nil then
-          local dist_x = view.w - math.abs(px - c)
-          local dist_y = view.h - math.abs(py - r)
-          if tile == FLOOR or tile == START then
-            love.graphics.setColor(0.2, 0.2, 0.2, far_vision * dist_x * dist_y)
-          elseif tile == WALL then
-            love.graphics.setColor(1, 1, 1, far_vision * dist_x * dist_y)
-          end
+
+    if player.is_alive() == true then
+      --Far vision:
+      --Draw land.
+      for r = first_row, last_row do
+        for c = first_col, last_col do
+          local tile = map[r][c]
+          --if tile ~= nil then
+            local dist_x = view.w - math.abs(px - c)
+            local dist_y = view.h - math.abs(py - r)
+            if tile == FLOOR or tile == START then
+              love.graphics.setColor(0.2, 0.2, 0.2, far_vision * dist_x * dist_y)
+            elseif tile == WALL then
+              love.graphics.setColor(1, 1, 1, far_vision * dist_x * dist_y)
+            end
+            love.graphics.rectangle(
+              "fill",
+              (c - first_col+4) * 32,
+              (r - first_row+3) * 32,
+              32,
+              32
+            )
+          --end
+        end
+      end
+
+      --Draw player.
+      love.graphics.setColor(1, 0, 0)
+      love.graphics.rectangle(
+        "fill",
+        (player.get_x() - first_col + 4) * 32,
+        (player.get_y() - first_row + 3) * 32,
+        32,
+        32
+      )
+
+      --Draw monsters.
+      for i = 1, #monsters do
+        local x, y = monsters[i].get_xy()
+        local dist_x = view.w - math.abs(px - x)
+        local dist_y = view.h - math.abs(py - y)
+        if first_row <= y and y <= last_row and
+           first_col <= x and x <= last_col and
+           not monsters[i].isdead() then
+          love.graphics.setColor(0, 1, 0, far_vision * dist_x * dist_y)
           love.graphics.rectangle(
             "fill",
-            (c - first_col+4) * 32,
-            (r - first_row+3) * 32,
+            (x - first_col + 4) * 32,
+            (y - first_row + 3) * 32,
             32,
             32
           )
-        --end
+        end
       end
-    end
-
-    --Draw player.
-    love.graphics.setColor(1, 0, 0)
-    love.graphics.rectangle(
-      "fill",
-      (player.get_x() - first_col + 4) * 32,
-      (player.get_y() - first_row + 3) * 32,
-      32,
-      32
-    )
-
-    --Draw monsters.
-    for i = 1, #monsters do
-      local x, y = monsters[i].get_xy()
-      local dist_x = view.w - math.abs(px - x)
-      local dist_y = view.h - math.abs(py - y)
-      if first_row <= y and y <= last_row and
-         first_col <= x and x <= last_col and
-         not monsters[i].isdead() then
-        love.graphics.setColor(0, 1, 0, far_vision * dist_x * dist_y)
-        love.graphics.rectangle(
-          "fill",
-          (x - first_col + 4) * 32,
-          (y - first_row + 3) * 32,
-          32,
-          32
-        )
+      --Near vision:
+      ---[[
+      for r = vision_first_row, vision_last_row do
+        for c = vision_first_col, vision_last_col do
+          local tile = map[r][c]
+          --if tile ~= nil then
+            if tile == FLOOR or tile == START then
+              love.graphics.setColor(0.2, 0.2, 0.2, near_vision)
+            elseif tile == WALL then
+              love.graphics.setColor(1, 1, 1, near_vision)
+            end
+            love.graphics.rectangle(
+              "fill",
+              (c - first_col+4) * 32,
+              (r - first_row+3) * 32,
+              32,
+              32
+            )
+          --end
+        end
       end
-    end
-    --Near vision:
-    ---[[
-    for r = vision_first_row, vision_last_row do
-      for c = vision_first_col, vision_last_col do
-        local tile = map[r][c]
-        --if tile ~= nil then
-          if tile == FLOOR or tile == START then
-            love.graphics.setColor(0.2, 0.2, 0.2, near_vision)
-          elseif tile == WALL then
-            love.graphics.setColor(1, 1, 1, near_vision)
-          end
+      --]]
+      --Draw player.
+      love.graphics.setColor(1, 0, 0, near_vision)
+      love.graphics.rectangle(
+        "fill",
+        (player.get_x() - first_col + 4) * 32,
+        (player.get_y() - first_row + 3) * 32,
+        32,
+        32
+      )
+
+      --Draw monsters.
+      for i = 1, #monsters do
+        local x, y = monsters[i].get_xy()
+        local dist_x = view.w - math.abs(px - x)
+        local dist_y = view.h - math.abs(py - y)
+        if vision_first_row <= y and y <= vision_last_row and
+           vision_first_col <= x and x <= vision_last_col and
+           not monsters[i].isdead() then
+          love.graphics.setColor(0, 1, 0, near_vision)
           love.graphics.rectangle(
             "fill",
-            (c - first_col+4) * 32,
-            (r - first_row+3) * 32,
+            (x - first_col + 4) * 32,
+            (y - first_row + 3) * 32,
             32,
             32
           )
-        --end
+        end
       end
-    end
-    --]]
-    --Draw player.
-    love.graphics.setColor(1, 0, 0, near_vision)
-    love.graphics.rectangle(
-      "fill",
-      (player.get_x() - first_col + 4) * 32,
-      (player.get_y() - first_row + 3) * 32,
-      32,
-      32
-    )
+      --Draw hp.
+      love.graphics.setColor(1, 1, 1)
+      love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
+      --Draw message box.
+      love.graphics.setColor(1, 1, 1, 0.5)
+      love.graphics.rectangle("fill", 40, window_height - 80, 200, 80)
+      love.graphics.setColor(0, 0, 0)
+      love.graphics.print(messenger.tostring(), 40, window_height - 80)
+    else
 
-    --Draw monsters.
-    for i = 1, #monsters do
-      local x, y = monsters[i].get_xy()
-      local dist_x = view.w - math.abs(px - x)
-      local dist_y = view.h - math.abs(py - y)
-      if vision_first_row <= y and y <= vision_last_row and
-         vision_first_col <= x and x <= vision_last_col and
-         not monsters[i].isdead() then
-        love.graphics.setColor(0, 1, 0, near_vision)
-        love.graphics.rectangle(
-          "fill",
-          (x - first_col + 4) * 32,
-          (y - first_row + 3) * 32,
-          32,
-          32
-        )
-      end
-    end
-    --Draw hp.
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
-    --Draw message box.
-    love.graphics.setColor(1, 1, 1, 0.5)
-    love.graphics.rectangle("fill", 40, window_height - 80, 200, 80)
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.print(messenger.tostring(), 40, window_height - 80)
-  end
+      love.graphics.print('You died!', 400, 300)
 
-  --Print the map to the console.
-  function self.print()
-    for r = 1, map.rows do
-      for c = 1, map.cols do
-        io.write(map[r][c], " ")
-      end
-      io.write("\n")
     end
   end
 
-  return self
+    --Print the map to the console.
+    function self.print()
+      for r = 1, map.rows do
+        for c = 1, map.cols do
+          io.write(map[r][c], " ")
+        end
+        io.write("\n")
+      end
+    end
+
+    return self
+
 end
 return Game.new()

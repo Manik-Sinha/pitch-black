@@ -2,6 +2,7 @@ local Player = {}
 function Player.new()
   local self = {}
   local x, y
+  local alive
   local hp, attack, defense, vision = 100, 3, 1, 2
   function self.set_xy(xx, yy)
     x = xx
@@ -16,9 +17,18 @@ function Player.new()
   function self.take_damage(dmg)
     local damage_dealt = math.max(0, dmg - defense)
     hp = hp - damage_dealt
-    --No death implemented yet.
+    if hp < 0 then
+       alive = false
+    end
     return damage_dealt
   end
+
+  function self.born()
+    alive = true
+  end
+
+  function self.is_alive() return alive end
+
   function self.ismonster() return false end
   return self
 end
