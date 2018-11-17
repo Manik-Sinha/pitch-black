@@ -101,6 +101,8 @@ function Game.new()
 
   --Initialize game.
   function self.init()
+    map.unit = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
+    map.item = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
     local player_found = false
     for r = 1, map.rows do
       for c = 1, map.cols do
@@ -115,6 +117,7 @@ function Game.new()
         end
       end
     end
+    monsters = {}
     place_monsters(50)
     --Needed for resetting the game:
     player.born()
