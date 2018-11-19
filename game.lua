@@ -408,7 +408,7 @@ function Game.new()
       love.graphics.print("hp: " .. player.get_hp(), 0, window_height - 20)
       --Draw message box.
       love.graphics.setColor(1, 1, 1, 0.5)
-      love.graphics.rectangle("fill", 40, window_height - 80, 200, 80)
+      love.graphics.rectangle("fill", 40, window_height - 80, 250, 80)
       love.graphics.setColor(0, 0, 0)
       love.graphics.print(messenger.tostring(), 40, window_height - 80)
     else
