@@ -1,6 +1,7 @@
 --game.lua
 
 require "monster"
+require "item"
 local m = require "messenger"
 local messenger = m.new(5)
 --Game class.
@@ -35,6 +36,8 @@ function Game.new()
   local player = require "player"
   --Assume view.h and view.w are odd for now.
   local view = {w = 21, h = 11}
+  local monsters = {}
+  --local items = {}
 
   local near_vision = 1
   local far_vision =  1
@@ -53,7 +56,6 @@ function Game.new()
     end
   end
 
-  local monsters = {}
   function remove_dead_monsters()
     local index = 1
     local length = #monsters
@@ -71,6 +73,7 @@ function Game.new()
       end
     end
   end
+
   function place_monsters(count)
     --Create table floor holding all coordinates of floor tiles.
     local floor = {}
@@ -99,6 +102,37 @@ function Game.new()
     end
   end
 
+  function place_items(count)
+    --Create table floor holding all coordinates of floor tiles.
+    local floor = {}
+    local index = 1
+    for r = 1, map.rows do
+      for c = 1, map.cols do
+        if map[r][c] == FLOOR and map.item[r][c] == nil then
+          floor[index] = {}
+          floor[index].x = c
+          floor[index].y = r
+          index = index + 1
+        end
+      end
+    end
+
+    --Place items on random floor tiles.
+    count = math.min(count, #floor)
+    local last_index = #floor
+    for i = 1, count do
+      local index = love.math.random(1, last_index)
+      --items[i] = newitem("Unknown Item")
+      local x, y = floor[index].x, floor[index].y
+      --items[i].set_xy(x, y)
+      --map.item[y][x] = items[i]
+      map.item[y][x] = newitem("Unknown Item")
+      map.item[y][x].set_xy(x, y)
+      floor[index], floor[last_index] = floor[last_index], floor[index]
+      last_index = last_index - 1
+    end
+  end
+
   --Initialize game.
   function self.init()
     map.unit = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}
@@ -118,7 +152,9 @@ function Game.new()
       end
     end
     monsters = {}
+    --items = {}
     place_monsters(50)
+    place_items(50)
     --Needed for resetting the game:
     player.born()
     messenger.reset()
@@ -150,6 +186,16 @@ function Game.new()
           map.unit[player_y][player_x] = nil
           map.unit[new_y][new_x] = player
           player.set_xy(new_x, new_y)
+          --Try to pick up an item if there is one.
+          if map.item[new_y][new_x] ~= nil then
+            local name = map.item[new_y][new_x].get_name()
+            if player.pickup(map.item[new_y][new_x]) then
+              messenger.post("You picked up a " .. name .. ".")
+              map.item[new_y][new_x] = nil
+            else
+              messenger.post("There is a " .. name .. " on the ground.")
+            end
+          end
         end
       end
       if monster_died then remove_dead_monsters() end
@@ -238,6 +284,26 @@ function Game.new()
         end
       end
 
+      --Draw items.
+      for r = first_row, last_row do
+        for c = first_col, last_col do
+          local item_tile = map.item[r][c]
+          if item_tile ~= nil then
+            local x, y = map.item[r][c].get_xy()
+            local dist_x = view.w - math.abs(px - x)
+            local dist_y = view.h - math.abs(py - y)
+            love.graphics.setColor(0, 0, 1, far_vision * dist_x * dist_y)
+            love.graphics.rectangle(
+              "fill",
+              (x - first_col + 4) * 32,
+              (y - first_row + 3) * 32,
+              32,
+              32
+            )
+          end
+        end
+      end
+
       --Draw player.
       love.graphics.setColor(1, 0, 0)
       love.graphics.rectangle(
@@ -288,6 +354,27 @@ function Game.new()
         end
       end
       --]]
+
+      --Draw items.
+      for r = vision_first_row, vision_last_row do
+        for c = vision_first_col, vision_last_col do
+          local item_tile = map.item[r][c]
+          if item_tile ~= nil then
+            local x, y = map.item[r][c].get_xy()
+            local dist_x = view.w - math.abs(px - x)
+            local dist_y = view.h - math.abs(py - y)
+            love.graphics.setColor(0, 0, 1, near_vision)
+            love.graphics.rectangle(
+              "fill",
+              (x - first_col + 4) * 32,
+              (y - first_row + 3) * 32,
+              32,
+              32
+            )
+          end
+        end
+      end
+
       --Draw player.
       love.graphics.setColor(1, 0, 0, near_vision)
       love.graphics.rectangle(

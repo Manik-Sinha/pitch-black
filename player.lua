@@ -1,12 +1,15 @@
+local Inventory = require "inventory"
 local Player = {}
 function Player.new()
   local self = {}
   local x, y
   local alive
   local hp, attack, defense, vision
+  local inventory
   function self.born()
     alive = true
     hp, attack, defense, vision = 100, 3, 1, 2
+    inventory = Inventory()
   end
   self.born()
   function self.set_xy(xx, yy)
@@ -31,6 +34,11 @@ function Player.new()
   function self.is_alive() return alive end
 
   function self.ismonster() return false end
+
+  function self.pickup(item)
+    return inventory.pickup(item)
+  end
+
   return self
 end
 return Player.new()
